@@ -1,5 +1,7 @@
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
 import Image from "react-bootstrap/Image";
 import ProgressBar from "react-bootstrap/ProgressBar";
@@ -10,7 +12,6 @@ import blurImage from "./blurImage";
 function App() {
   const [progress, setProgress] = useState(0);
   const [resultImageUrl, setResultImageUrl] = useState<null | string>(null);
-  // const [file, setFile] = useState<File | null>(null);
 
   const mainThread = useCallback(async (file: File) => {
     let interval: null | number = setInterval(() => {
@@ -70,23 +71,35 @@ function App() {
   }, []);
 
   return (
-    <Container style={{ marginTop: 60 }} className="d-flex flex-column">
-      <Form onSubmit={onSubmit} className="mb-4">
-        <Form.Group controlId="formFile" className="mb-3">
-          <Form.Label>Select image</Form.Label>
-          <Form.Control
-            disabled={progress > 0}
-            name="image"
-            accept="image/jpg,image/jpeg,image/png"
-            type="file"
-          />
-        </Form.Group>
-        <Button disabled={progress > 0} variant="primary" type="submit">
-          Submit
-        </Button>
-      </Form>
-      {progress > 0 && <ProgressBar now={progress} />}
-      {resultImageUrl && <Image src={resultImageUrl} />}
+    <Container className="d-flex flex-column mt-4">
+      <Col>
+        <Row>
+          <Form onSubmit={onSubmit} className="mb-4">
+            <Form.Group controlId="formFile" className="mb-3">
+              <Form.Label>Select image</Form.Label>
+              <Form.Control
+                disabled={progress > 0}
+                name="image"
+                accept="image/jpg,image/jpeg,image/png"
+                type="file"
+              />
+            </Form.Group>
+            <Button disabled={progress > 0} variant="primary" type="submit">
+              Submit
+            </Button>
+          </Form>
+        </Row>
+        {progress > 0 && (
+          <Row>
+            <ProgressBar now={progress} />
+          </Row>
+        )}
+        {resultImageUrl && (
+          <Row>
+            <Image src={resultImageUrl} />
+          </Row>
+        )}
+      </Col>
     </Container>
   );
 }
