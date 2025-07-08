@@ -2,7 +2,6 @@ import Image from "react-bootstrap/Image";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { useCallback, useState } from "react";
 import ImageWorker from "../image-worker?worker";
-import blurImage from "../blurImage";
 import FileUploadForm from "./FileUploadForm";
 import Shell from "./Shell";
 import useProgressBar from "../hooks/useProgressBar";
@@ -10,18 +9,6 @@ import useProgressBar from "../hooks/useProgressBar";
 export default function ImageBlur() {
   const [progress, { triggerProgress, resetProgress }] = useProgressBar();
   const [resultImageUrl, setResultImageUrl] = useState<null | string>(null);
-
-  const mainThread = useCallback(
-    async (file: File) => {
-      triggerProgress();
-
-      const resultUrl = await blurImage(file);
-      setResultImageUrl(resultUrl);
-
-      resetProgress();
-    },
-    [triggerProgress, resetProgress]
-  );
 
   // useEffect(() => {
   //   triggerProgress();
