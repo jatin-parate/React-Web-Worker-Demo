@@ -1,106 +1,50 @@
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Container from "react-bootstrap/Container";
 import Image from "react-bootstrap/Image";
 import ProgressBar from "react-bootstrap/ProgressBar";
-import { useCallback, useState, type FormEventHandler } from "react";
+import { useCallback, useState } from "react";
 import ImageWorker from "./image-worker?worker";
 import blurImage from "./blurImage";
+import FileUploadForm from "./components/FileUploadForm";
+import Shell from "./components/Shell";
+import useProgressBar from "./hooks/useProgressBar";
 
 function App() {
-  const [progress, setProgress] = useState(0);
+  const [progress, { triggerProgress, resetProgress }] = useProgressBar();
   const [resultImageUrl, setResultImageUrl] = useState<null | string>(null);
 
-  const mainThread = useCallback(async (file: File) => {
-    let interval: null | number = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 90) {
-          clearInterval(interval!);
-          interval = null;
-          return p;
-        }
+  const mainThread = useCallback(
+    async (file: File) => {
+      triggerProgress();
 
-        return p + 10;
-      });
-    }, 500);
+      const resultUrl = await blurImage(file);
+      setResultImageUrl(resultUrl);
 
-    const resultUrl = await blurImage(file);
+      resetProgress();
+    },
+    [triggerProgress, resetProgress]
+  );
 
-    if (interval) clearInterval(interval);
-    setProgress(0);
-
-    setResultImageUrl(resultUrl);
-  }, []);
+  // useEffect(() => {
+  //   triggerProgress();
+  // }, []);
 
   const spinUpWorker = useCallback((file: File) => {
+    triggerProgress();
+
     const imageWorker = new ImageWorker();
     imageWorker.postMessage({ file });
 
-    let interval: null | number = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 90) {
-          clearInterval(interval!);
-          interval = null;
-          return p;
-        }
-
-        return p + 10;
-      });
-    }, 500);
-
     imageWorker.addEventListener("message", (e) => {
-      if (interval) clearInterval(interval);
-      setProgress(0);
-
+      resetProgress();
       setResultImageUrl(e.data.resultUrl);
     });
   }, []);
 
-  const onSubmit: FormEventHandler<HTMLFormElement> = useCallback((event) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-    const file = formData.get("image") as File;
-
-    if (!file?.size) return;
-
-    // mainThread(file);
-    spinUpWorker(file);
-  }, []);
-
   return (
-    <Container className="d-flex flex-column mt-4">
-      <Col>
-        <Row>
-          <Form onSubmit={onSubmit} className="mb-4">
-            <Form.Group controlId="formFile" className="mb-3">
-              <Form.Label>Select image</Form.Label>
-              <Form.Control
-                disabled={progress > 0}
-                name="image"
-                accept="image/jpg,image/jpeg,image/png"
-                type="file"
-              />
-            </Form.Group>
-            <Button disabled={progress > 0} variant="primary" type="submit">
-              Submit
-            </Button>
-          </Form>
-        </Row>
-        {progress > 0 && (
-          <Row>
-            <ProgressBar now={progress} />
-          </Row>
-        )}
-        {resultImageUrl && (
-          <Row>
-            <Image src={resultImageUrl} />
-          </Row>
-        )}
-      </Col>
-    </Container>
+    <Shell>
+      <FileUploadForm disabled={progress > 0} onSubmit={spinUpWorker} />
+      {progress > 0 && <ProgressBar now={progress} />}
+      {resultImageUrl && <Image src={resultImageUrl} />}
+    </Shell>
   );
 }
 
