@@ -2,6 +2,7 @@ import Image from "react-bootstrap/Image";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { useCallback, useState } from "react";
 import ImageWorker from "../image-worker?worker";
+import type { ImageWorkerData } from '../image-worker';
 import FileUploadForm from "./FileUploadForm";
 import Shell from "./Shell";
 import useProgressBar from "../hooks/useProgressBar";
@@ -18,7 +19,7 @@ export default function ImageBlur() {
     triggerProgress();
 
     const imageWorker = new ImageWorker();
-    imageWorker.postMessage({ file });
+    imageWorker.postMessage({ file } as ImageWorkerData);
 
     imageWorker.addEventListener("message", (e) => {
       resetProgress();
